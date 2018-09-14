@@ -20,7 +20,6 @@ from airflow.contrib.hooks.nats_hook import NATSHook
 from airflow.sensors.base_sensor_operator import BaseSensorOperator
 from airflow.utils.decorators import apply_defaults
 
-
 class NATSSensor(BaseSensorOperator):
     """
     Checks for the existence of a message for a NATS subject
@@ -45,4 +44,6 @@ class NATSSensor(BaseSensorOperator):
     def poke(self, context):
         self.log.info('Sensor check existence of message for subject: %s', self.subject)
         message = NATSHook(self.nats_conn_id).get_one_message(self.subject)
+        self.log.info('Sensor received message: %s', message)
+        context['task_instance'].xcom_push(key='nats_message', value=message)
         return message is not None
