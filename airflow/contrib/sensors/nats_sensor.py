@@ -27,7 +27,7 @@ class NATSSensor(BaseSensorOperator):
     message through XCom).
     """
     template_fields = ('subject',)
-    ui_color = '#f0eee4'
+    ui_color = '#ff7f50'
 
     @apply_defaults
     def __init__(self, subject, nats_conn_id, *args, **kwargs):
