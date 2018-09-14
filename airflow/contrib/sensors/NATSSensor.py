@@ -20,9 +20,11 @@ from airflow.contrib.hooks.nats_hook import NATSHook
 from airflow.sensors.base_sensor_operator import BaseSensorOperator
 from airflow.utils.decorators import apply_defaults
 
+
 class NATSSensor(BaseSensorOperator):
     """
-    Checks for the existence of a message for a NATS subject
+    Checks for the existence of a message for a NATS subject (and passes
+    message through XCom).
     """
     template_fields = ('subject',)
     ui_color = '#f0eee4'
@@ -41,9 +43,16 @@ class NATSSensor(BaseSensorOperator):
         self.nats_conn_id = nats_conn_id
         self.subject = subject
 
+        self._message = None
+
+    def execute(self, context):
+        """Overridden to allow messages to be passed"""
+        super(NATSSensor, self).execute(context)
+        return self._message
+
     def poke(self, context):
         self.log.info('Sensor check existence of message for subject: %s', self.subject)
-        message = NATSHook(self.nats_conn_id).get_one_message(self.subject)
-        self.log.info('Sensor received message: %s', message)
-        context['task_instance'].xcom_push(key='nats_message', value=message)
-        return message is not None
+        nats_hook = NATSHook(nats_conn_id=self.nats_conn_id, subject=self.subject)
+        self._message = nats_hook.get_one_message()
+        self.log.info('Sensor received message: %s', self._message)
+        return self._message
