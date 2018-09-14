@@ -22,6 +22,7 @@ from pynats import NATSClient
 from airflow.hooks.base_hook import BaseHook
 from socket import timeout
 
+
 class NATSHook(BaseHook):
     def __init__(self, nats_conn_id='nats_default', subject='default', timeout=5.000):
         self.nats_conn_id = nats_conn_id
@@ -30,7 +31,7 @@ class NATSHook(BaseHook):
 
     def get_conn_url(self):
         conn = self.get_connection(self.nats_conn_id)
-        return "{conn_type}://{host}:{port}".format(conn)
+        return "nats://{host}:{port}".format(conn)
 
     def get_one_message(self):
         msg = None
@@ -46,3 +47,7 @@ class NATSHook(BaseHook):
                 self.log.info("no message... :(")
             finally:
                 return msg
+
+    def publish(self, message):
+        with NATSClient(url=self.get_conn_url(), socket_timeout=self.timeout) as client:
+            client.publish(self.subject, payload=message.encode())
