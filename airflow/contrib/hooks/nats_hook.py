@@ -24,21 +24,24 @@ from socket import timeout
 
 
 class NATSHook(BaseHook):
-    def __init__(self, nats_conn_id='nats_default', subject='default', timeout=5.000):
+    def __init__(self, nats_conn_id='nats_default', subject='default', timeout=60.000):
         self.nats_conn_id = nats_conn_id
         self.subject = subject
         self.timeout = timeout
 
     def get_conn_url(self):
         conn = self.get_connection(self.nats_conn_id)
-        return "nats://{host}:{port}".format(conn)
+        return "nats://{host}:{port}".format(host=conn.host, port=conn.port)
 
     def get_one_message(self):
-        msg = None
-        with NATSClient(url=self.get_conn_url(), socket_timeout=self.timeout) as client:
+        url = self.get_conn_url()
+        self.log.info("Connecting to NATS server: {url}".format(url=url))
+        with NATSClient(url=url, socket_timeout=self.timeout) as client:
+            msg = None
             def callback(message):
                 nonlocal msg
-                msg = message.payload
+                self.log.info("Received message: {message}".format(message=message))
+                msg = message.payload.decode()
 
             client.subscribe(self.subject, callback=callback, max_messages=1)
             try:
