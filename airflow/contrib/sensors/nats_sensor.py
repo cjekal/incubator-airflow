@@ -30,7 +30,7 @@ class NATSSensor(BaseSensorOperator):
     ui_color = '#ff7f50'
 
     @apply_defaults
-    def __init__(self, subject, nats_conn_id, *args, **kwargs):
+    def __init__(self, subject, nats_conn_id='nats_default', *args, **kwargs):
         """
         Create a new NATSSensor
 
